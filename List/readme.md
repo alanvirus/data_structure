@@ -6,9 +6,9 @@ qs：什么叫算法稳定，为什么selectMax后者优先可以保证selection
 mergeSort和insertionSort(search从后面开找)都是稳定的
 radixSort过程中使用的排序子程序必须是稳定排序，并且radixSort是稳定的
 
-
+k为桶数量
           时间复杂度          空间复杂度        适用场景
-桶排序     O(n+nlogn-nlogk)   O(n+k)           元素均匀分布
+桶排序     O(n+nlogn-nlogk+K)   O(n+k)           元素均匀分布
 计数排序   O(n+maxV-minV)     O(n+maxV-minV)   maxV-minV很小，元素分布密集
 基数排序   O(dn)              O(n+k)           1.非负整数或可以作为非负整数比较 2.maxV-minV很小（让d小一点）
 （对于基数排序，使用二进制，d最大，k=2最小，此时O(nd)很可能还不如O(nlogn);使用maxV做基数，k=maxV最大，d=1最小，此时退化为计数排序）

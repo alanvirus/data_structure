@@ -9,6 +9,8 @@
 //一层中紧邻塔顶节点构成的列的长度的期望为2，因为从最靠左的塔顶节点开始走，期望是走一步
 //put分析类似O(logn)
 //remove=get+拆塔+清除空QuadList O(logn)
+
+//习题9-1说skiplist可以保证雷同词条后进靠后，先进先出，看起来并不行
 #include "../Dictionary.h"
 #include "../Entry.h"
 #include "../../List/List.h"
@@ -19,7 +21,7 @@ class SkipList : public Dictionary<K, V>, public List<QuadList<Entry<K, V>> *>
 protected:
     bool skipSearch(
         ListNode<QuadList<Entry<K, V>> *> *&qlist,
-        QuadListNode<Entry<K, V>> *&p,
+        QuadListNode<Entry<K, V>> *&p,//省空间做法，创建一个单独的横向列表存entry，QLNode中存指针
         K &k);
 
 public:

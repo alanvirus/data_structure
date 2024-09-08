@@ -24,13 +24,13 @@ void Eratosthenes(int N,char* file)
             }
         }
     }
-    std::cout<<std::endl;
     bitmap.dump(file);
 }
 int main(){
-    int N=1000;
-    Eratosthenes(N,(char*)"prime_number");
-    Bitmap b((char*)"prime_number",N);
+    int N=98;
+    char* file=(char*)"prime";
+    Eratosthenes(N,file);
+    Bitmap b(file,N);
     for(int i=0;i<N;i++){
         if(!b.test(i)){
             std::cout<<i<<" ";

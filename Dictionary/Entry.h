@@ -1,3 +1,4 @@
+#define EntryPosition(K,V) Entry<K,V>*
 template<typename K,typename V> 
 struct Entry{
         K key;

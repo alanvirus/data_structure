@@ -10,12 +10,21 @@ r-key-value O（logn） O（n）     p/r-key-valueO（1）/O (n)     O（1）/O(
 
 
 词典ADT：
-put(key,value):插入词条（key，value），成功返回true，失败返回false （已存在是true但不真插入；skiplist直接允许雷同插入；false）
+put(key,value):插入词条（key，value），成功返回true，失败返回false （已存在是true但不真插入；skiplist直接允许雷同插入；hash不允许雷同false）
 get(key):根据key得到value，没有则返回NULL
-remove(key):删除key对应的词条(key,value),成功返回true，失败返回false  （本来不存在是true;skiplist如果不存在则false，存在雷同删除最靠右的）
+remove(key):删除key对应的词条(key,value),成功返回true，失败返回false  （本来不存在是true;skiplist如果不存在则false，存在雷同删除最靠右的） hash也是不存在则false
 size() 
 
 实现：
 1. 在支持key的比较操作后，任何一种搜索树都可以用来实现词典 （java.util.TreeMap用红黑树实现） 
 2. SkipList 增强版列表，同样需要支持key的比较
 3. 散列函数+散列表
+4. key为字符串时，可使用trie
+
+W.pugh的统计：
+skiplist(A),非递归版AVL树(C),伸展树(B),递归版2-3树(D)
+就search()/get()接口效率而言，B最优（利用了数据局部性）
+就insert()/put()接口效率而言,A最优，C优于D (A不需要维持平衡，C恢复平衡比D容易)
+就remove()接口效率而言，A最优（不需要维持平衡）
+
+按键手机自带一个字母到数字2~9的映射，因此IBM-SALE可以让自己的电话号等于对应的hashCode()一一映射
