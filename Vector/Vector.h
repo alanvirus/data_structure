@@ -15,7 +15,7 @@ protected:
     bool bubble(Rank lo, Rank hi);
     void bubbleSort(Rank lo, Rank hi);
     void insertionSort(Rank lo, Rank hi);
-    Rank max(Rank lo, Rank hi)const;
+    Rank max(Rank lo, Rank hi) const;
     void selectionSort(Rank lo, Rank hi); // 固定O(n^2),selectMax耗时O(n)，改用就地堆排序可以使selectmax变O(logn),整体变O(nlogn)  向量的冒泡就是一种selectionSort，但是还是找最大值再交换常数更小
     void merge(Rank lo, Rank mi, Rank hi);
     void mergeSort(Rank lo, Rank hi);
@@ -49,11 +49,11 @@ public:
     Rank size() const { return _size; }
     bool empty() const { return !_size; }
     Rank disordered() const;
-    Rank find(T const &e) const
+    Rank find(T const &e) const // 找不到返回-1
     {
         return find(e, 0, _size);
     }
-    Rank find(T const &e, Rank lo, Rank hi) const;
+    Rank find(T const &e, Rank lo, Rank hi) const; //[lo,hi)中寻找，找不到返回lo-1.
     Rank search(T const &e) const
     { // call-by-value有序列表查找 O(1)-O(n)-O(n) 有序向量 O(1)-O(logn)-O(logn)
         return (0 >= _size) ? -1 : search(e, 0, _size);
@@ -187,7 +187,6 @@ Rank Vector<T>::deduplicate()
   // 优化：Bitmap结构标记得删除元素，最后一块删除,这样查找O(n^2),删除O(n),查找比删除快
   // 在元素集有限时可用桶排序，桶记录元素出现个数以及是否保留；遍历L，若B[V[i]]>0,记录已保留，后续遇到相同元素删除 O(n)
     Rank old_size = _size;
-    ListNodePosition(T) p = header;
     Rank r = 0;
     for (int i = _size - 2; i >= 0; i--)
     {
@@ -270,8 +269,8 @@ static Rank fibSearch(T *A, T const &e, Rank lo, Rank hi)
     while (lo < hi)
     {
         while (hi - lo < fib.get())
-            fib.prev()
-                Rank mi = lo + fib.get() - 1; // fib()-1型分割点
+            fib.prev();
+        Rank mi = lo + fib.get() - 1; // fib()-1型分割点
         if (e < A[mi])
             hi = mi;
         else if (e > A[mi])
@@ -378,7 +377,7 @@ void Vector<T>::merge(Rank lo, Rank mi, Rank hi) // 稳定排序
         ;
     int lc = hi - mi;
     T *C = &_elem[mi];
-    for (Rank i = 0, j = 0; k = 0; (j < lb) || (k < lc);)
+    for (Rank i = 0,j = 0,k = 0; (j < lb) || (k < lc);)
     { // s=i+j递增且0~hi-lo，theta(n)
         if ((j < lb) && (!(k < lc) || (B[j] <= C[k])))
             A[i++] = B[j++];
@@ -514,32 +513,40 @@ void Vector<T>::quickSort(Rank lo, Rank hi)
 //     }
 // }
 template <typename T>
-Rank Vector<T>::max(Rank lo, Rank hi) const
+Rank Vector<T>::max(Rank lo, Rank hi) const //[lo,hi]中的最大值
 {
-    Rank max=lo;
-    while((++lo<hi)&&(_elem[lo]>_elem[max])){
-        max=lo;
+    Rank max = hi;
+    while (lo < hi--)
+    { // 逆向扫描，后者优先，保证selectionSOrt稳定性
+        if (_elem[hi] > _elem[max])
+        {
+            max = hi;
+        }
     }
     return max;
 }
 template <typename T>
 void Vector<T>::selectionSort(Rank lo, Rank hi)
 {
-    int m = n;
-    ListNodePosition(T) pp = p->pred;
-    ListNodePosition(T) tail = p;
-    while (m--)
-    {
-        tail = tail->succ;
+    while (lo < --hi)
+    {                                        // 仅剩一个元素时跳出
+        swap(_elem[max(lo, hi)], _elem[hi]); // 这种实现并不稳定，如果想稳定需要整体向左平移(max,hi]
     }
-    while (n > 1)
+}
+template <typename T>
+bool majEleCheck(Vector<T> &A, T maj)
+{
+    int occurrence = 0;
+    for (int i = A.size(); i > 0; i--)
     {
-        ListNodePosition(T) max = selectMax(pp->succ, n); // 这里不能用p。因为p有可能因为是max而被删掉
-        insertB(tail, remove(max));                       // 涉及动态申请与释放内存，其实交换max和tail->pred的值就可以，这样pp也可以省略了
-                                    // 交换前判断tail->pred==max: 在列表为一个0-n-1的排列时，该情况发生次数为循环节数-1（因为n>1）,若元素等概率独立分布，该情况发生概率为当前未排序队列长度分之一，故总数为调和级数（或者直接求排列的循环解暑期望
-                                    // ）,由于logn/n趋于0，该优化在渐进意义上无意义
-        tail = tail->pred;
-        n--;
+        if (A[i - 1] == maj)
+            occurrence++;
     }
-    p = pp->succ;
+    return occurrence * 2 > A.size();
+}
+template <typename T>
+bool majority(Vector<T> &A, T &maj)
+{
+    maj = majEleCandidate(A); // 寻找中位数做为候选者
+    return majEleCheck(A, maj);
 }
