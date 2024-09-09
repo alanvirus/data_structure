@@ -1,4 +1,4 @@
-#include"Fib.h"
+#include "Fib.h"
 typedef int Rank;
 #define DEFAULT_CAPACITY 3 // 默认初始容量
 template <typename T>
@@ -15,13 +15,15 @@ protected:
     bool bubble(Rank lo, Rank hi);
     void bubbleSort(Rank lo, Rank hi);
     void insertionSort(Rank lo, Rank hi);
-    Rank max(Rank lo, Rank hi);
+    Rank max(Rank lo, Rank hi)const;
     void selectionSort(Rank lo, Rank hi); // 固定O(n^2),selectMax耗时O(n)，改用就地堆排序可以使selectmax变O(logn),整体变O(nlogn)  向量的冒泡就是一种selectionSort，但是还是找最大值再交换常数更小
     void merge(Rank lo, Rank mi, Rank hi);
     void mergeSort(Rank lo, Rank hi);
     Rank partition(Rank lo, Rank hi); // 轴点构造算法
+    Rank partition_B(Rank lo, Rank hi);
     void quickSort(Rank lo, Rank hi);
     void heapSort(Rank lo, Rank hi);
+    void radixSort(Rank lo, Rank hi);
     // void insertionSort(ListNodePosition(T)& p,Rank n);//O(n)-O(n^2)-O(n^2) search操作平均是O(n)的，对向量做insertionsort虽然searchO(1),但是insertO(n)可以冒泡实现,所以同样是O(n^2) //序列平均有O(logn)个无需移动
     //                                                   //若所有逆序对的间距不超过k，由于insert时要么消灭逆序对，要么逆序对间距变小或不变，因此insert[r]时最多searchk次，总共就小于O(kn),可见k为常数就变成O（n）
     //                                                   //0-r-1的insert不会影响L[r]与前面序列形成的逆序对数i[r],那么需要关键码比较i(r)+1次，i(r)求和为I，故比较总次数为(I+n);另外移动是O(n)的，时间取决于I，输入敏感算法
@@ -247,7 +249,7 @@ Rank Vector<T>::search(T const &e, Rank lo, Rank hi) const
     return (rand() % 2) ? binSearch(_elem, e, lo, hi) : fibSearch(_elem, e, lo, hi);
 }
 template <typename T>
-static Rank binSearch_three_partition(T *A, T const &e, Rank lo, Rank hi)//比较操作未必是O(1)的,先认为比较操作用时为常数，并认为查询成功或失败的所有可能情况都等可能，那么成功的平均查找长度为3/2k-1+1.5k/(2^k-1)，失败平均查找长度为1.5k,故渐进均为O(logn),常系数1.5
+static Rank binSearch_three_partition(T *A, T const &e, Rank lo, Rank hi) // 比较操作未必是O(1)的,先认为比较操作用时为常数，并认为查询成功或失败的所有可能情况都等可能，那么成功的平均查找长度为3/2k-1+1.5k/(2^k-1)，失败平均查找长度为1.5k,故渐进均为O(logn),常系数1.5
 {
     while (lo < hi)
     {
@@ -264,11 +266,12 @@ static Rank binSearch_three_partition(T *A, T const &e, Rank lo, Rank hi)//比�
 template <typename T>
 static Rank fibSearch(T *A, T const &e, Rank lo, Rank hi)
 {
-    Fib fib(hi-lo);//log_phi(n) 该步一分摊就没了
+    Fib fib(hi - lo); // log_phi(n) 该步一分摊就没了
     while (lo < hi)
     {
-        while(hi-lo<fib.get())fib.prev()
-        Rank mi = lo+fib.get()-1;//fib()-1型分割点
+        while (hi - lo < fib.get())
+            fib.prev()
+                Rank mi = lo + fib.get() - 1; // fib()-1型分割点
         if (e < A[mi])
             hi = mi;
         else if (e > A[mi])
@@ -279,55 +282,76 @@ static Rank fibSearch(T *A, T const &e, Rank lo, Rank hi)
     return -1;
 }
 template <typename T>
-static Rank binSearch_two_partition(T *A, T const &e, Rank lo, Rank hi)//最好情况不如三分法，但性能稳定且常系数是1
+static Rank binSearch_two_partition(T *A, T const &e, Rank lo, Rank hi) // 最好情况不如三分法，但性能稳定且常系数是1
 {
-    while (lo +1 < hi)
+    while (lo + 1 < hi)
     {
         Rank mi = (lo + hi) >> 1;
         if (e < A[mi])
             hi = mi;
-        else 
-            lo = mi ;
+        else
+            lo = mi;
     }
-    return (A[lo]==e)?lo:-1;//基本是返回小于等于e的元素中最靠后的，如果均比e大，返回第一个，因此对一个做单独判断
+    return (A[lo] == e) ? lo : -1; // 基本是返回小于等于e的元素中最靠后的，如果均比e大，返回第一个，因此对一个做单独判断
 }
-//关于search的进一步要求:在有重雷同元素时返回最后者，这种性质对于插入排序的稳定性很关键；查询失败时返回不大于e的最后一个元素的rank而非总是-1
+// 关于search的进一步要求:在有重雷同元素时返回最后者，这种性质对于插入排序的稳定性很关键；查询失败时返回不大于e的最后一个元素的rank而非总是-1
 template <typename T>
-static Rank binSearch(T *A, T const &e, Rank lo, Rank hi)//最好情况不如三分法，但性能稳定且常系数是1
-{                   //课本证明：[0,lo)中元素均不大于e，[hi,n)中元素均大于e，初始两集合均空成立，后续归纳可证，最终lo==hi时--lo就是不大于e的最靠后元素
-    while (lo < hi) //如果[lo,hi)中有大于e的，返回lo=最靠左的，否则lo=hi返回；边界情况hi-lo==1or2单独证，剩下的归纳可证
+static Rank binSearch(T *A, T const &e, Rank lo, Rank hi) // 最好情况不如三分法，但性能稳定且常系数是1
+{                                                         // 课本证明：[0,lo)中元素均不大于e，[hi,n)中元素均大于e，初始两集合均空成立，后续归纳可证，最终lo==hi时--lo就是不大于e的最靠后元素
+    while (lo < hi)                                       // 如果[lo,hi)中有大于e的，返回lo=最靠左的，否则lo=hi返回；边界情况hi-lo==1or2单独证，剩下的归纳可证
     {
         Rank mi = (lo + hi) >> 1;
         if (e < A[mi])
             hi = mi;
-        else 
-            lo = mi+1;
+        else
+            lo = mi + 1;
     }
-    return --lo;//返回小于等于e的元素中最靠后的
+    return --lo; // 返回小于等于e的元素中最靠后的
 }
 template <typename T>
 void Vector<T>::sort(Rank lo, Rank hi)
 {
-    switch(rand()%4){
-        case 1: mergeSort(lo,hi); break;
-        case 2: insertionSort(lo,hi); break;
-        case 3: selectionSort(lo,hi); break;
-        case 4: bubbleSort(lo,hi); break;
-        case 5: heapSort(lo,hi); break;
-        default: quickSort(lo,hi); break;
+    switch (rand() % 4)
+    {
+    case 1:
+        mergeSort(lo, hi);
+        break;
+    case 2:
+        insertionSort(lo, hi);
+        break;
+    case 3:
+        selectionSort(lo, hi);
+        break;
+    case 4:
+        bubbleSort(lo, hi);
+        break;
+    case 5:
+        heapSort(lo, hi);
+        break;
+    case 6:
+        radixSort(lo, hi);
+        break; // bucket sort
+    default:
+        quickSort(lo, hi);
+        break;
     }
 }
 template <typename T>
-void Vector<T>::bubbleSort(Rank lo,Rank hi){//费时版selectionSort
-    while(!(bubble(lo,hi--)));
+void Vector<T>::bubbleSort(Rank lo, Rank hi)
+{ // 费时版selectionSort
+    while (!(bubble(lo, hi--)))
+        ;
 }
 template <typename T>
-bool Vector<T>::bubble(Rank lo,Rank hi){
-    bool Sorted=true;//利用该标记进行了一定的优化，渐进无意义
-    while(++lo<hi){
-        if(_elem[lo-1]>_elem[lo]){
-            Sorted=false;
-            swap(_elem[lo-1],_elem[lo]);
+bool Vector<T>::bubble(Rank lo, Rank hi)
+{
+    bool Sorted = true; // 利用该标记进行了一定的优化，渐进无意义
+    while (++lo < hi)
+    {
+        if (_elem[lo - 1] > _elem[lo])
+        {
+            Sorted = false;
+            swap(_elem[lo - 1], _elem[lo]);
         }
     }
     return Sorted;
@@ -344,51 +368,105 @@ bool Vector<T>::bubble(Rank lo,Rank hi){
 //     }
 //     p = pp->succ;
 // }
-// template <typename T>
-// void List<T>::selectionSort(ListNodePosition(T) & p, Rank n)
-// {
-//     int m = n;
-//     ListNodePosition(T) pp = p->pred;
-//     ListNodePosition(T) tail = p;
-//     while (m--)
-//     {
-//         tail = tail->succ;
-//     }
-//     while (n > 1)
-//     {
-//         ListNodePosition(T) max = selectMax(pp->succ, n); // 这里不能用p。因为p有可能因为是max而被删掉
-//         insertB(tail, remove(max));                       // 涉及动态申请与释放内存，其实交换max和tail->pred的值就可以，这样pp也可以省略了
-//                                     // 交换前判断tail->pred==max: 在列表为一个0-n-1的排列时，该情况发生次数为循环节数-1（因为n>1）,若元素等概率独立分布，该情况发生概率为当前未排序队列长度分之一，故总数为调和级数（或者直接求排列的循环解暑期望
-//                                     // ）,由于logn/n趋于0，该优化在渐进意义上无意义
-//         tail = tail->pred;
-//         n--;
-//     }
-//     p = pp->succ;
-// }
 template <typename T>
-void Vector<T>::merge(Rank lo,Rank mi,Rank hi)//稳定排序
-{   //lo<=mi<=hi
-    T* A=&_elem[lo];
-    int lb=mi-lo;
-    T* B=new T[lb];
-    for(Rank i=0;i<lb;B[i]=A[i++]);
-    int lc = hi-mi; 
-    T*C =&_elem[mi];
-    for(Rank i=0,j=0;k=0;(j<lb)||(k<lc);){ //s=i+j递增且0~hi-lo，theta(n)
-        if((j<lb)&&(!(k<lc)||(B[j]<=C[k])))A[i++]=B[j++];
-        if((k<lc)&&(!(j<lb)||(C[k]<B[j])))A[i++]=C[k++];
+void Vector<T>::merge(Rank lo, Rank mi, Rank hi) // 稳定排序
+{                                                // lo<=mi<=hi
+    T *A = &_elem[lo];
+    int lb = mi - lo;
+    T *B = new T[lb];
+    for (Rank i = 0; i < lb; B[i] = A[i++])
+        ;
+    int lc = hi - mi;
+    T *C = &_elem[mi];
+    for (Rank i = 0, j = 0; k = 0; (j < lb) || (k < lc);)
+    { // s=i+j递增且0~hi-lo，theta(n)
+        if ((j < lb) && (!(k < lc) || (B[j] <= C[k])))
+            A[i++] = B[j++];
+        if ((k < lc) && (!(j < lb) || (C[k] < B[j])))
+            A[i++] = C[k++];
     }
     delete[] B;
 }
 template <typename T>
-void Vector<T>::mergeSort(Rank lo,Rank hi)
+Rank Vector<T>::partition(Rank lo, Rank hi) // 在[lo,hi]中选择pivot mi，使得[lo,mi)中的元素不大于_elem[mi],(mi,hi]中的元素不小于_elem[mi]
+                                            // pivot存在，则满足：排序后mi秩不变，A[lo,hi)和S[lo,hi)中的元素一致，(hi,lo]中一致、
+                                            // pivot可能不存在，但是可以人为构造
+                                            // 该算法并不稳定 655
+                                            // 两个子问题规模取决于随机选取的pivot在有序向量中的rank r=0或n-1,最坏的情况
+                                            // 退化情况：几乎有序的向量:T(n)=T(0)+T(n-1)+O(n)=T(n-1)+O(n)=...=T(1)+O(n^2)=O(n^2)
+                                            // 退化情况：元素大量重复：和上面类似
+                                            // 解决办法：1.随机选取pivot 2.三者取中法：随机取三个点，用居中者做pivot，统计上更居中
+                                            // T(n)=O(n)+sigma_0^n-1(T(i)+T(n-1-i))/n 在pivot在n个数中等概率随机选取时，O(1.386nlog_2(n))
 {
-    if (hi-lo < 2)//递归基
+    swap(_elem[lo], _elem[lo + rand() % (hi - lo + 1)]);
+    T pivot = _elem[lo];
+    while (lo < hi)
+    {
+        while ((lo < hi) && (_elem[hi] >= pivot))
+        {
+            hi--;
+        }
+        _elem[lo] = _elem[hi]; //_elem[lo++]=_elem[hi];会导致lo和hi哪个是空位无法确定，参考B版本
+        while ((lo < hi) && (_elem[lo] <= pivot))
+        {
+            lo++;
+        }
+        _elem[hi] = _elem[lo]; // 被挪动的元素会重复比较两次_elem[hi--]=_elem[lo];
+    }
+    _elem[lo] = pivot;
+    return lo;
+}
+template <typename T>
+Rank Vector<T>::partition_B(Rank lo, Rank hi) // 勤于交换重复元素，应对退化情况2
+{
+    swap(_elem[lo], _elem[lo + rand() % (hi - lo + 1)]);
+    T pivot = _elem[lo];
+    while (lo < hi)
+    {
+        while (lo < hi)
+        {
+            if (_elem[hi] > pivot)
+            {
+                hi--;
+            }
+            else
+            {
+                _elem[lo++] = _elem[hi];
+            }
+        }
+        while (lo < hi)
+        {
+            if (_elem[lo] < pivot)
+            {
+                lo++;
+            }
+            else
+            {
+                _elem[hi--] = _elem[lo];
+            }
+        }
+    }
+    _elem[lo] = pivot;
+    return lo;
+}
+template <typename T>
+void Vector<T>::mergeSort(Rank lo, Rank hi)
+{
+    if (hi - lo < 2) // 递归基
         return;
-    Rank mi = (lo+hi) >> 1;
+    Rank mi = (lo + hi) >> 1; // 子问题划分O(1),子任务独立，子任务规模接近
     mergeSort(lo, mi);
     mergeSort(mi, hi);
-    merge(lo,mi,hi);
+    merge(lo, mi, hi); // 由子问题的解得到原问题的解O(n)
+}
+template <typename T>
+void Vector<T>::quickSort(Rank lo, Rank hi)
+{
+    if (hi - lo < 2)
+        return;
+    Rank mi = partition(lo, hi - 1); // 子任务划分O(n),子任务独立，但无法保证子任务规模接近
+    quickSort(lo, mi);
+    quickSort(mi + 1, hi); // 由子问题的解立马得到原问题的解
 }
 // template <typename T>
 // void List<T>::radixSort(ListNodePosition(T) & p, Rank n)
@@ -435,17 +513,33 @@ void Vector<T>::mergeSort(Rank lo,Rank hi)
 //         q->data = x;
 //     }
 // }
-// template <typename T>
-// ListNodePosition(T) List<T>::selectMax(ListNodePosition(T) p, Rank n) const
-// {
-//     ListNodePosition(T) max = p;
-//     while (n--)
-//     {
-//         if (p->data >= max->data)
-//         { // 后者优先,(前者优先的话雷同元素将完全颠倒顺序)
-//             max = p;
-//         }
-//         p = p->succ;
-//     }
-//     return max;
-// }
+template <typename T>
+Rank Vector<T>::max(Rank lo, Rank hi) const
+{
+    Rank max=lo;
+    while((++lo<hi)&&(_elem[lo]>_elem[max])){
+        max=lo;
+    }
+    return max;
+}
+template <typename T>
+void Vector<T>::selectionSort(Rank lo, Rank hi)
+{
+    int m = n;
+    ListNodePosition(T) pp = p->pred;
+    ListNodePosition(T) tail = p;
+    while (m--)
+    {
+        tail = tail->succ;
+    }
+    while (n > 1)
+    {
+        ListNodePosition(T) max = selectMax(pp->succ, n); // 这里不能用p。因为p有可能因为是max而被删掉
+        insertB(tail, remove(max));                       // 涉及动态申请与释放内存，其实交换max和tail->pred的值就可以，这样pp也可以省略了
+                                    // 交换前判断tail->pred==max: 在列表为一个0-n-1的排列时，该情况发生次数为循环节数-1（因为n>1）,若元素等概率独立分布，该情况发生概率为当前未排序队列长度分之一，故总数为调和级数（或者直接求排列的循环解暑期望
+                                    // ）,由于logn/n趋于0，该优化在渐进意义上无意义
+        tail = tail->pred;
+        n--;
+    }
+    p = pp->succ;
+}
