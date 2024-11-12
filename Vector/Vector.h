@@ -1,4 +1,5 @@
 #include "Fib.h"
+#include <cstdlib>
 typedef int Rank;
 #define DEFAULT_CAPACITY 3 // 默认初始容量
 template <typename T>
@@ -131,7 +132,7 @@ void permute(Vector<T> &V) // 使各元素等概率出现在各位置
 {
     for (int i = V.size(); i > 0; i--)
     {
-        swap(V[i - 1], V[rand() % i]); // 这里的[]是Vector重载的
+        swap(V[i - 1], V[std::rand() % i]); // 这里的[]是Vector重载的
     }
 }
 template <typename T>
@@ -140,7 +141,7 @@ void Vector<T>::unsort(Rank lo, Rank hi)
     T *V = &_elem[lo];
     for (int i = hi - lo; i > 0; i--)
     {
-        swap(V[i - 1], V[rand() % i]); // 这里的[]是数组下标访问
+        swap(V[i - 1], V[std::rand() % i]); // 这里的[]是数组下标访问
     }
 }
 template <typename T>
@@ -245,7 +246,7 @@ template <typename T>
 Rank Vector<T>::search(T const &e, Rank lo, Rank hi) const
 { // 0<=lo<hi<=_size,要求不能是空区间，find可以
     // 有序向量中，rank有了新的含义，小于，等于S[r]的元素有i，k个，则该元素及其雷同元素分布于[i,i+k)
-    return (rand() % 2) ? binSearch(_elem, e, lo, hi) : fibSearch(_elem, e, lo, hi);
+    return (std::rand() % 2) ? binSearch(_elem, e, lo, hi) : fibSearch(_elem, e, lo, hi);
 }
 template <typename T>
 static Rank binSearch_three_partition(T *A, T const &e, Rank lo, Rank hi) // 比较操作未必是O(1)的,先认为比较操作用时为常数，并认为查询成功或失败的所有可能情况都等可能，那么成功的平均查找长度为3/2k-1+1.5k/(2^k-1)，失败平均查找长度为1.5k,故渐进均为O(logn),常系数1.5
@@ -310,7 +311,7 @@ static Rank binSearch(T *A, T const &e, Rank lo, Rank hi) // 最好情况不如�
 template <typename T>
 void Vector<T>::sort(Rank lo, Rank hi)
 {
-    switch (rand() % 4)
+    switch (std::rand() % 4)
     {
     case 1:
         mergeSort(lo, hi);
@@ -397,7 +398,7 @@ Rank Vector<T>::partition(Rank lo, Rank hi) // 在[lo,hi]中选择pivot mi，使
                                             // 解决办法：1.随机选取pivot 2.三者取中法：随机取三个点，用居中者做pivot，统计上更居中
                                             // T(n)=O(n)+sigma_0^n-1(T(i)+T(n-1-i))/n 在pivot在n个数中等概率随机选取时，O(1.386nlog_2(n))
 {
-    swap(_elem[lo], _elem[lo + rand() % (hi - lo + 1)]);
+    swap(_elem[lo], _elem[lo + std::rand() % (hi - lo + 1)]);
     T pivot = _elem[lo];
     while (lo < hi)
     {
@@ -418,7 +419,7 @@ Rank Vector<T>::partition(Rank lo, Rank hi) // 在[lo,hi]中选择pivot mi，使
 template <typename T>
 Rank Vector<T>::partition_B(Rank lo, Rank hi) // 勤于交换重复元素，应对退化情况2
 {
-    swap(_elem[lo], _elem[lo + rand() % (hi - lo + 1)]);
+    swap(_elem[lo], _elem[lo + std::rand() % (hi - lo + 1)]);
     T pivot = _elem[lo];
     while (lo < hi)
     {

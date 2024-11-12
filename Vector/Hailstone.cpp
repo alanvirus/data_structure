@@ -1,13 +1,15 @@
 #include <iostream>
 #include "Vector.h"
-template<typename T>
-class print{
-    public:
-    void operator()(T& e){
-        std::cout<<e<<" ";
+template <typename T>
+class print
+{
+public:
+    void operator()(T &e)
+    {
+        std::cout << e << " ";
     }
 };
-int hailstone(int n)//根据
+int hailstone(int n) // 根据
 {
     Vector<int> elem(100);
     while (1)
@@ -17,7 +19,7 @@ int hailstone(int n)//根据
             elem.insert(1);
             break;
         }
-        if (elem.find(n)>=0)
+        if (elem.find(n) >= 0)
         { // 成环了
             break;
         }
@@ -34,12 +36,13 @@ int hailstone(int n)//根据
     }
     print<int> print;
     elem.traverse(print);
-    std::cout<<std::endl;
+    std::cout << std::endl;
     return elem.size();
 }
 void test_hailstone()
 {
     // std::cout << "out"<<hailstone(4) << " ";
     for (int i = 1; i < 10; i++)
-        std::cout << hailstone(i) << std::endl;;
+        std::cout << hailstone(i) << std::endl;
+    ;
 }
