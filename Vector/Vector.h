@@ -1,5 +1,6 @@
 #include "Fib.h"
 #include <cstdlib>
+#include <iostream>
 typedef int Rank;
 #define DEFAULT_CAPACITY 3 // 默认初始容量
 template <typename T>
@@ -15,7 +16,7 @@ protected:
     void shrink();                               // 装填因子过小时压缩
     bool bubble(Rank lo, Rank hi);
     void bubbleSort(Rank lo, Rank hi);
-    void insertionSort(Rank lo, Rank hi);
+    // void insertionSort(Rank lo, Rank hi);
     Rank max(Rank lo, Rank hi) const;
     void selectionSort(Rank lo, Rank hi); // 固定O(n^2),selectMax耗时O(n)，改用就地堆排序可以使selectmax变O(logn),整体变O(nlogn)  向量的冒泡就是一种selectionSort，但是还是找最大值再交换常数更小
     void merge(Rank lo, Rank mi, Rank hi);
@@ -23,8 +24,8 @@ protected:
     Rank partition(Rank lo, Rank hi); // 轴点构造算法
     Rank partition_B(Rank lo, Rank hi);
     void quickSort(Rank lo, Rank hi);
-    void heapSort(Rank lo, Rank hi);
-    void radixSort(Rank lo, Rank hi);
+    // void heapSort(Rank lo, Rank hi);
+    // void radixSort(Rank lo, Rank hi);
     // void insertionSort(ListNodePosition(T)& p,Rank n);//O(n)-O(n^2)-O(n^2) search操作平均是O(n)的，对向量做insertionsort虽然searchO(1),但是insertO(n)可以冒泡实现,所以同样是O(n^2) //序列平均有O(logn)个无需移动
     //                                                   //若所有逆序对的间距不超过k，由于insert时要么消灭逆序对，要么逆序对间距变小或不变，因此insert[r]时最多searchk次，总共就小于O(kn),可见k为常数就变成O（n）
     //                                                   //0-r-1的insert不会影响L[r]与前面序列形成的逆序对数i[r],那么需要关键码比较i(r)+1次，i(r)求和为I，故比较总次数为(I+n);另外移动是O(n)的，时间取决于I，输入敏感算法
@@ -105,8 +106,11 @@ void Vector<T>::expand()
         _capacity = DEFAULT_CAPACITY;
     T *oldElem = _elem;
     _elem = new T[_capacity <<= 1];
-    for (int i = 0; i < _size; _elem[i] = oldElem[i++])
-        ;
+    // for (int i = 0; i < _size; _elem[i] = oldElem[i++]);
+    for (int i = 0; i < _size; i++)
+    {
+        _elem[i]=oldElem[i];
+    }
     delete[] oldElem;
 }
 template <typename T>
@@ -118,8 +122,9 @@ void Vector<T>::shrink()
         return; // 装填因子超25%,不缩容 或更低，防止出现频繁交替缩容扩容的情况
     T *oldElem = _elem;
     _elem = new T[_capacity >>= 1];
-    for (int i = 0; i < _size; _elem[i] = oldElem[i++])
-        ;
+    for (int i = 0; i < _size; i++){
+        _elem[i] = oldElem[i];
+    }
     delete[] oldElem;
 }
 template <typename T>
@@ -317,7 +322,7 @@ void Vector<T>::sort(Rank lo, Rank hi)
         mergeSort(lo, hi);
         break;
     case 2:
-        insertionSort(lo, hi);
+        // insertionSort(lo, hi);
         break;
     case 3:
         selectionSort(lo, hi);
@@ -326,10 +331,10 @@ void Vector<T>::sort(Rank lo, Rank hi)
         bubbleSort(lo, hi);
         break;
     case 5:
-        heapSort(lo, hi);
+        // heapSort(lo, hi);
         break;
     case 6:
-        radixSort(lo, hi);
+        // radixSort(lo, hi);
         break; // bucket sort
     default:
         quickSort(lo, hi);

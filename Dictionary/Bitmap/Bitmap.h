@@ -52,4 +52,7 @@ class Bitmap{
                 delete[] oldM;
             }
         }
+        char* bits2string(int length){
+            
+        }
 };
